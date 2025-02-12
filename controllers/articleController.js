@@ -12,14 +12,31 @@ export const createArticle = async (req, res) => {
     }
 };
 
-export const getAllArticles = async (req, res) => {
-    try{
-        const articles = await Article.find().populate("author", "username email");
-        res.json(articles);
-    } catch(error){
-        res.status(500).json({message: "Server error"});
+export const getAllArticles = async (req, res) => {     // added pagenation
+    try {
+        let page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 10;
+        let skip = (page - 1) * limit;
+
+        const articles = await Article.find()
+            .populate("author", "username email")
+            .skip(skip)
+            .limit(limit);
+
+        const total = await Article.countDocuments();
+
+        res.json({
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            data: articles
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
     }
 };
+
 
 export const getArticleById = async (req, res) => {
     try{
